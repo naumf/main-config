@@ -11,31 +11,23 @@ const {
 
 const kWatchError = Symbol('WatchError')
 
-function checkEnvConfigFile(path) {
-  const config = require(path)
+function checkEnvConfigFile(configPath) {
+  const config = require(configPath)
   if (typeof config !== 'function') {
-    throw new Error(`${path} does not export a function.`)
+    throw new Error(`${configPath} does not export a function.`)
   }
 }
 
-function mainConfig(params = {}) {
-  let emitter
-  const { validateEnvSchema, validateConfigSchema } = validateParamsSchema(
-    params
-  )
-  if (params.env.watch) emitter = new EventEmitter()
+function createEmitter(watch) {
+  return watch ? new EventEmitter() : null
+}
+
+function setEnvPath(params) {
   params.env.path = params.env.path || path.join(process.cwd(), '.env')
   checkFileAccess(params.env.path)
+}
 
-  const defaultConfig = {
-    env: null,
-    environments: {}
-  }
-
-  const selectedConfigs = {}
-
-  const isOverridableOnWatch = []
-
+function setConfigPath(defaultConfig, params) {
   params.path =
     params.path ||
     path.dirname(
@@ -43,14 +35,47 @@ function mainConfig(params = {}) {
     )
 
   checkEnvConfigFile(path.join(params.path, 'global.js'))
+
   for (const env of params.environments) {
     checkEnvConfigFile(path.join(params.path, `${env}.js`))
     defaultConfig.environments[env.toUpperCase()] = env
   }
+}
 
+function setDefaultNotOverridableOnWatch(params) {
   if (!params.env.notOverridableOnWatch.includes('NODE_ENV')) {
     params.env.notOverridableOnWatch.push('NODE_ENV')
   }
+}
+
+function getReadonlyConfig(isReadonly, config) {
+  return isReadonly ? readonly(config) : null
+}
+
+function emitChanges(emitter, changes) {
+  if (changes && changes.length) {
+    emitter.emit('*', changes)
+    for (const change of changes) {
+      emitter.emit(change.path, change.newValue, change.oldValue)
+    }
+  }
+}
+
+function mainConfig(params = {}) {
+  const { validateEnvSchema, validateConfigSchema } = validateParamsSchema(
+    params
+  )
+  const emitter = createEmitter(params.env.watch)
+  const defaultConfig = {
+    env: null,
+    environments: {}
+  }
+  const selectedConfigs = {}
+  const isOverridableOnWatch = []
+
+  setEnvPath(params)
+  setConfigPath(defaultConfig, params)
+  setDefaultNotOverridableOnWatch(params)
 
   let [currentConfig] = buildConfig({
     params,
@@ -62,7 +87,7 @@ function mainConfig(params = {}) {
     validateConfigSchema
   })
 
-  let readonlyConfig = params.readonly ? readonly(currentConfig) : null
+  let readonlyConfig = getReadonlyConfig(params.readonly, currentConfig)
   let unwatchFile = () => {
     params.env.watch = false
   }
@@ -85,16 +110,10 @@ function mainConfig(params = {}) {
           validateEnvSchema,
           validateConfigSchema
         })
-        readonlyConfig = params.readonly ? readonly(currentConfig) : null
-
-        if (changes && changes.length) {
-          emitter.emit('*', changes)
-          for (const change of changes) {
-            emitter.emit(change.path, change.newValue, change.oldValue)
-          }
-        }
-      } catch (err) {
-        emitter.emit(kWatchError, err)
+        readonlyConfig = getReadonlyConfig(params.readonly, currentConfig)
+        emitChanges(emitter, changes)
+      } catch (e) {
+        emitter.emit(kWatchError, e)
       }
     })
 
@@ -108,17 +127,16 @@ function mainConfig(params = {}) {
     return params.readonly ? readonlyConfig : currentConfig
   }
 
-  function watchConfig(path, listener) {
+  function watchConfig(propertyPath, listener) {
     if (params.env.watch) {
       emitter.setMaxListeners(emitter.getMaxListeners() + 1)
-      emitter.on(path, listener)
+      emitter.on(propertyPath, listener)
       return () => {
-        emitter.off(path, listener)
+        emitter.off(propertyPath, listener)
         emitter.setMaxListeners(Math.max(emitter.getMaxListeners() - 1, 0))
       }
-    } else {
-      return () => {}
     }
+    return () => null
   }
 
   function watchError(listener) {
@@ -129,9 +147,8 @@ function mainConfig(params = {}) {
         emitter.off(kWatchError, listener)
         emitter.setMaxListeners(Math.max(emitter.getMaxListeners() - 1, 0))
       }
-    } else {
-      return () => {}
     }
+    return () => null
   }
 
   return { config, watchConfig, watchError, unwatchFile }

@@ -58,74 +58,79 @@ function compare(cmp, val2, path) {
   }
 }
 
-function diffMerge(target = {}, patch = {}, cmp = {}, changeHandler = null) {
-  function _diffMerge(target, patch, cmp, changeHandler, path) {
-    if (patch instanceof Date) {
-      patch = new Date(patch)
-      if (changeHandler) {
-        const { diff, newValue, oldValue } = compare(cmp, patch, path)
-        if (diff) changeHandler(path, newValue, oldValue)
-      }
-      return patch
-    }
-    if (!isObject(patch)) {
-      if (changeHandler) {
-        const { diff, newValue, oldValue } = compare(cmp, patch, path)
-        if (diff) changeHandler(path, newValue, oldValue)
-      }
-      return patch
-    }
-    if (Array.isArray(patch)) {
-      patch = cloneArray(patch)
-      if (changeHandler) {
-        const { diff, newValue, oldValue } = compare(cmp, patch, path)
-        if (diff) changeHandler(path, newValue, oldValue)
-      }
-      return patch
-    }
+function checkForChanges(patch, cmp, changeHandler, path) {
+  if (changeHandler) {
+    const { diff, newValue, oldValue } = compare(cmp, patch, path)
+    if (diff) changeHandler(path, newValue, oldValue)
+  }
+}
 
-    if (!isObject(target) || isNullish(target)) {
-      target = {}
-    } else if (Array.isArray(target)) {
-      target = cloneArray(target)
-    } else if (isObject(target)) {
-      target = Object.assign({}, target)
-    }
+function prepareTarget(target) {
+  if (!isObject(target) || isNullish(target)) {
+    target = {}
+  } else if (Array.isArray(target)) {
+    target = cloneArray(target)
+  } else if (isObject(target)) {
+    target = Object.assign({}, target)
+  }
+  return target
+}
 
-    const targetNames = []
+function getPropertyPath(path, prop) {
+  return (path && `${path}.${prop}`) || prop
+}
 
-    for (const name in patch) {
-      targetNames.push(name)
-      if (!hasOwnProp(patch, name) || isInvalidProp(name)) continue
-      target[name] = _diffMerge(
-        target[name],
-        patch[name],
-        cmp,
-        changeHandler,
-        (path && `${path}.${name}`) || name
-      )
-    }
+function isPropNotOk(obj, prop) {
+  return !hasOwnProp(obj, prop) || isInvalidProp(prop)
+}
 
-    for (const name in target) {
-      if (
-        targetNames.indexOf(name) !== -1 ||
-        !hasOwnProp(target, name) ||
-        isInvalidProp(name)
-      ) {
-        continue
-      }
-      target[name] = _diffMerge(
-        target[name],
-        target[name],
-        cmp,
-        changeHandler,
-        (path && `${path}.${name}`) || name
-      )
-    }
-
-    return target
+function _diffMerge(target, patch, cmp, changeHandler, path) {
+  if (patch instanceof Date) {
+    patch = new Date(patch)
+    checkForChanges(patch, cmp, changeHandler, path)
+    return patch
+  }
+  if (!isObject(patch)) {
+    checkForChanges(patch, cmp, changeHandler, path)
+    return patch
+  }
+  if (Array.isArray(patch)) {
+    patch = cloneArray(patch)
+    checkForChanges(patch, cmp, changeHandler, path)
+    return patch
   }
 
+  target = prepareTarget(target)
+
+  const targetNames = []
+
+  for (const name in patch) {
+    targetNames.push(name)
+    if (isPropNotOk(patch, name)) continue
+    target[name] = _diffMerge(
+      target[name],
+      patch[name],
+      cmp,
+      changeHandler,
+      getPropertyPath(path, name)
+    )
+  }
+
+  for (const name in target) {
+    if (targetNames.indexOf(name) !== -1 || isPropNotOk(target, name)) continue
+    target[name] = _diffMerge(
+      target[name],
+      target[name],
+      cmp,
+      changeHandler,
+      getPropertyPath(path, name)
+    )
+  }
+
+  return target
+}
+
+function diffMerge(target = {}, patch = {}, cmp = {}, changeHandler = null) {
   return _diffMerge(
     target,
     patch,

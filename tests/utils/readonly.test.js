@@ -210,12 +210,12 @@ testSuite('should match updated values', () => {
 testSuite('should use cached proxies', () => {
   const cache = new WeakMap()
   const cacheSpy = sinon.spy(cache)
-  const readonlyConfig = readonly(config, cache, true)
+  const rConfig = readonly(config, cache, true)
 
   assert.is(cacheSpy.get.callCount, 0)
   assert.is(cacheSpy.set.callCount, 0)
 
-  assert.is(config.server.port, readonlyConfig.server.port)
+  assert.is(config.server.port, rConfig.server.port)
   assert.is(cacheSpy.get.callCount, 0)
   assert.is(cacheSpy.set.callCount, 1)
 
@@ -224,7 +224,7 @@ testSuite('should use cached proxies', () => {
 
   assert.is(cacheSpy.get.callCount, 0)
   assert.is(cacheSpy.set.callCount, 0)
-  assert.is(config.server.port, readonlyConfig.server.port)
+  assert.is(config.server.port, rConfig.server.port)
   assert.is(cacheSpy.get.callCount, 1)
   assert.is(cacheSpy.set.callCount, 0)
 
@@ -234,7 +234,7 @@ testSuite('should use cached proxies', () => {
   assert.is(cacheSpy.get.callCount, 0)
   assert.is(cacheSpy.set.callCount, 0)
   assert.is(
-    readonlyConfig.modules.swagger.schemes[0],
+    rConfig.modules.swagger.schemes[0],
     config.modules.swagger.schemes[0]
   )
   assert.is(cacheSpy.get.callCount, 0)
@@ -246,7 +246,7 @@ testSuite('should use cached proxies', () => {
   assert.is(cacheSpy.get.callCount, 0)
   assert.is(cacheSpy.set.callCount, 0)
   assert.is(
-    readonlyConfig.modules.swagger.schemes[0],
+    rConfig.modules.swagger.schemes[0],
     config.modules.swagger.schemes[0]
   )
   assert.is(cacheSpy.get.callCount, 3)
@@ -257,10 +257,7 @@ testSuite('should use cached proxies', () => {
 
   assert.is(cacheSpy.get.callCount, 0)
   assert.is(cacheSpy.set.callCount, 0)
-  assert.is(
-    readonlyConfig.modules.auth.token.secret,
-    config.modules.auth.token.secret
-  )
+  assert.is(rConfig.modules.auth.token.secret, config.modules.auth.token.secret)
   assert.is(cacheSpy.get.callCount, 1)
   assert.is(cacheSpy.set.callCount, 2)
 })

@@ -1,6 +1,6 @@
 {
   "name": "main-config",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "main": "./index.js",
   "types": "./index.d.ts",
   "scripts": {
@@ -8,7 +8,7 @@
     "lint:fix": "./node_modules/.bin/eslint . --ext .js --fix",
     "test": "uvu tests",
     "test:coverage": "c8 --clean --all --include=src yarn test",
-    "test:report": "c8 report --include=src --reporter=html"
+    "test:report": "c8 report --include=src --reporter=html --reporter=lcov"
   },
   "repository": {
     "type": "git",

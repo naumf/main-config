@@ -10,7 +10,7 @@ function readonlyTrap() {
   throw new Error(`Assignment to read-only properties is not allowed.`)
 }
 
-const handler = {
+const proxyHandler = {
   set: readonlyTrap,
   defineProperty: readonlyTrap,
   deleteProperty: readonlyTrap,
@@ -23,7 +23,7 @@ const handler = {
     if (proxyCache.has(result)) {
       proxy = proxyCache.get(result)
     } else {
-      proxy = createReadonlyProxy(result, handler)
+      proxy = createReadonlyProxy(result, proxyHandler)
       proxyCache.set(result, proxy)
     }
     return proxy
@@ -34,7 +34,7 @@ function readonly(target, cache, replaceCache) {
   if (!proxyCache || replaceCache) {
     proxyCache = cache || new WeakMap()
   }
-  return createReadonlyProxy(target, handler)
+  return createReadonlyProxy(target, proxyHandler)
 }
 
 module.exports = readonly

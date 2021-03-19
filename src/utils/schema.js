@@ -65,15 +65,17 @@ const paramsSchema = {
   additionalProperties: false
 }
 
+function stringifyParams(params) {
+  return params ? ': ' + JSON.stringify(params) : ''
+}
+
 function createAjvErrors(messagePrefix = '', errors = []) {
   return new Error(
     messagePrefix +
       errors
         .map((e) =>
           e.dataPath
-            ? `path: ${e.dataPath}, ${e.message}${
-                e.params ? ': ' + JSON.stringify(e.params) : ''
-              }`
+            ? `path: ${e.dataPath}, ${e.message}${stringifyParams(e.params)}`
             : e.message
         )
         .join('\n')
@@ -86,9 +88,7 @@ function createEnvSchemaErrors(errors = []) {
       errors
         .map((e) =>
           e.dataPath
-            ? `${e.dataPath.slice(1)}, ${e.message}${
-                e.params ? ': ' + JSON.stringify(e.params) : ''
-              }`
+            ? `${e.dataPath.slice(1)}, ${e.message}${stringifyParams(e.params)}`
             : e.message
         )
         .join('\n')

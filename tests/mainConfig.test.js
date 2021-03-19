@@ -20,6 +20,36 @@ function changeWatchEnvValue(buffer, key, value) {
   )
 }
 
+function testWatchConfig({
+  watchConfig,
+  unwatchFile,
+  envBuffer,
+  oldVersion,
+  newVersion
+}) {
+  return new Promise((resolve, reject) => {
+    let timeout = null
+    const unwatch = watchConfig('version', function (_newValue, _oldValue) {
+      if (timeout) clearTimeout(timeout)
+      unwatch()
+      unwatchFile()
+      changeWatchEnvValue(envBuffer, 'MC_VERSION', oldVersion)
+      resolve({ newValue: _newValue, oldValue: _oldValue })
+    })
+    changeWatchEnvValue(envBuffer, 'MC_VERSION', newVersion)
+    timeout = setTimeout(() => {
+      unwatch()
+      unwatchFile()
+      changeWatchEnvValue(envBuffer, 'MC_VERSION', oldVersion)
+      reject(
+        new Error(
+          `Callback was not invoked within the specified timeout: ${timeoutDelay}ms`
+        )
+      )
+    }, timeoutDelay)
+  })
+}
+
 const testSuite = suite('mainConfig')
 
 testSuite.after.each(() => {
@@ -319,26 +349,12 @@ testSuite('should watch for changes', async () => {
   })
   assert.is(config().version, 1)
 
-  const { newValue, oldValue } = await new Promise((resolve, reject) => {
-    let timeout = null
-    const unwatch = watchConfig('version', function (newValue, oldValue) {
-      if (timeout) clearTimeout(timeout)
-      unwatch()
-      unwatchFile()
-      changeWatchEnvValue(envBuffer, 'MC_VERSION', oldVersion)
-      resolve({ newValue, oldValue })
-    })
-    changeWatchEnvValue(envBuffer, 'MC_VERSION', newVersion)
-    timeout = setTimeout(() => {
-      unwatch()
-      unwatchFile()
-      changeWatchEnvValue(envBuffer, 'MC_VERSION', oldVersion)
-      reject(
-        new Error(
-          `Callback was not invoked within the specified timeout: ${timeoutDelay}ms`
-        )
-      )
-    }, timeoutDelay)
+  const { newValue, oldValue } = await testWatchConfig({
+    watchConfig,
+    unwatchFile,
+    envBuffer,
+    oldVersion,
+    newVersion
   })
 
   assert.is(newValue, newVersion)
@@ -364,26 +380,12 @@ testSuite(
     config().newVersion = 2
     assert.is(config().newVersion, 2)
 
-    const { newValue, oldValue } = await new Promise((resolve, reject) => {
-      let timeout = null
-      const unwatch = watchConfig('version', function (newValue, oldValue) {
-        if (timeout) clearTimeout(timeout)
-        unwatch()
-        unwatchFile()
-        changeWatchEnvValue(envBuffer, 'MC_VERSION', oldVersion)
-        resolve({ newValue, oldValue })
-      })
-      changeWatchEnvValue(envBuffer, 'MC_VERSION', newVersion)
-      timeout = setTimeout(() => {
-        unwatch()
-        unwatchFile()
-        changeWatchEnvValue(envBuffer, 'MC_VERSION', oldVersion)
-        reject(
-          new Error(
-            `Callback was not invoked within the specified timeout: ${timeoutDelay}ms`
-          )
-        )
-      }, timeoutDelay)
+    const { newValue, oldValue } = await testWatchConfig({
+      watchConfig,
+      unwatchFile,
+      envBuffer,
+      oldVersion,
+      newVersion
     })
 
     assert.is(newValue, newVersion)
@@ -439,7 +441,7 @@ testSuite(
       }
     })
     assert.not.throws(() => {
-      const unwatch = watchConfig('version', () => {})
+      const unwatch = watchConfig('version', () => null)
       unwatch()
       const unwatchError = watchError()
       unwatchError()
