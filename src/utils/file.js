@@ -30,19 +30,25 @@ function watchFile(filePath, cb) {
     For more info check this issue: https://github.com/nodejs/node/issues/22517
   */
   return fs.watch(directory, function (_eventType, filename) {
-    /* c8 ignore next */
-    if (filename !== file) return
+    /* c8 ignore next 3 */
+    if (filename !== file) {
+      return
+    }
     fs.stat(filePath, function (err, stats) {
       /* c8 ignore next 4 */
       if (err) {
         cb(err)
         return
       }
-      /* c8 ignore next */
-      if (mtimeMs === stats.mtimeMs) return
+      /* c8 ignore next 3 */
+      if (mtimeMs === stats.mtimeMs) {
+        return
+      }
       mtimeMs = stats.mtimeMs
-      /* c8 ignore next */
-      if (!stats.size) return
+      /* c8 ignore next 3 */
+      if (!stats.size) {
+        return
+      }
       cb()
     })
   })

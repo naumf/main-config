@@ -8,10 +8,14 @@ const isNullish = require('./isNullish')
 const isObject = require('./isObject')
 
 function cloneObject(obj) {
-  if (obj instanceof Date) return new Date(obj)
+  if (obj instanceof Date) {
+    return new Date(obj)
+  }
   const cloned = {}
   for (const name in obj) {
-    if (!hasOwnProp(obj, name) || isInvalidProp(name)) continue
+    if (!hasOwnProp(obj, name) || isInvalidProp(name)) {
+      continue
+    }
     const value = obj[name]
     if (isNullish(value)) {
       cloned[name] = value
@@ -45,7 +49,9 @@ function cloneArray(arr) {
 }
 
 function compare(cmp, val2, path) {
-  if (!path) return { diff: false, newValue: null, oldValue: null }
+  if (!path) {
+    return { diff: false, newValue: null, oldValue: null }
+  }
   const names = path.split('.')
   let val1 = cmp
   for (const name of names) {
@@ -61,7 +67,9 @@ function compare(cmp, val2, path) {
 function checkForChanges(patch, cmp, changeHandler, path) {
   if (changeHandler) {
     const { diff, newValue, oldValue } = compare(cmp, patch, path)
-    if (diff) changeHandler(path, newValue, oldValue)
+    if (diff) {
+      changeHandler(path, newValue, oldValue)
+    }
   }
 }
 
@@ -105,8 +113,10 @@ function _diffMerge(target, patch, cmp, changeHandler, path) {
   const targetNames = []
 
   for (const name in patch) {
+    if (isPropNotOk(patch, name)) {
+      continue
+    }
     targetNames.push(name)
-    if (isPropNotOk(patch, name)) continue
     target[name] = _diffMerge(
       target[name],
       patch[name],
@@ -117,7 +127,9 @@ function _diffMerge(target, patch, cmp, changeHandler, path) {
   }
 
   for (const name in target) {
-    if (targetNames.indexOf(name) !== -1 || isPropNotOk(target, name)) continue
+    if (targetNames.indexOf(name) !== -1 || isPropNotOk(target, name)) {
+      continue
+    }
     target[name] = _diffMerge(
       target[name],
       target[name],

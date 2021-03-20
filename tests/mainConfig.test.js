@@ -30,7 +30,9 @@ function testWatchConfig({
   return new Promise((resolve, reject) => {
     let timeout = null
     const unwatch = watchConfig('version', function (_newValue, _oldValue) {
-      if (timeout) clearTimeout(timeout)
+      if (timeout) {
+        clearTimeout(timeout)
+      }
       unwatch()
       unwatchFile()
       changeWatchEnvValue(envBuffer, 'MC_VERSION', oldVersion)
@@ -54,13 +56,21 @@ const testSuite = suite('mainConfig')
 
 testSuite.after.each(() => {
   process.env.NODE_ENV = 'test'
-  if (hasOwnProp(process.env, 'MC_VERSION')) delete process.env.MC_VERSION
-  if (hasOwnProp(process.env, 'MC_DB_HOST')) delete process.env.MC_DB_HOST
-  if (hasOwnProp(process.env, 'MC_DB_PORT')) delete process.env.MC_DB_PORT
-  if (hasOwnProp(process.env, 'MC_DB_USERNAME'))
+  if (hasOwnProp(process.env, 'MC_VERSION')) {
+    delete process.env.MC_VERSION
+  }
+  if (hasOwnProp(process.env, 'MC_DB_HOST')) {
+    delete process.env.MC_DB_HOST
+  }
+  if (hasOwnProp(process.env, 'MC_DB_PORT')) {
+    delete process.env.MC_DB_PORT
+  }
+  if (hasOwnProp(process.env, 'MC_DB_USERNAME')) {
     delete process.env.MC_DB_USERNAME
-  if (hasOwnProp(process.env, 'MC_TOKEN_SECRET'))
+  }
+  if (hasOwnProp(process.env, 'MC_TOKEN_SECRET')) {
     delete process.env.MC_TOKEN_SECRET
+  }
 })
 
 testSuite('should be a function', () => {
@@ -410,7 +420,9 @@ testSuite('should emit errors when watching for changes', async () => {
   await new Promise((resolve, reject) => {
     let timeout = null
     const unwatchError = watchError((err) => {
-      if (timeout) clearTimeout(timeout)
+      if (timeout) {
+        clearTimeout(timeout)
+      }
       assert.instance(err, Error)
       unwatchError()
       unwatchFile()

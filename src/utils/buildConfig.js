@@ -6,12 +6,15 @@ const dotenv = require('dotenv')
 
 const { createAjvErrors, createEnvSchemaErrors } = require('./schema')
 const diffMerge = require('./diffMerge')
+const hasOwnProp = require('./hasOwnProp')
 
 function parseAndValidateEnv(envPath, validateEnvSchema) {
   const envBuffer = fs.readFileSync(envPath, { encoding: 'utf8' })
   const parsed = dotenv.parse(envBuffer)
   const validEnvSchema = validateEnvSchema(parsed)
-  if (!validEnvSchema) throw createEnvSchemaErrors(validateEnvSchema.errors)
+  if (!validEnvSchema) {
+    throw createEnvSchemaErrors(validateEnvSchema.errors)
+  }
   return parsed
 }
 
@@ -60,7 +63,9 @@ function validateNodeEnv(environments) {
 }
 
 function assignSelectedConfigs(defaultConfig, selectedConfigs, configPath) {
-  if (!defaultConfig.env) defaultConfig.env = process.env.NODE_ENV
+  if (!defaultConfig.env) {
+    defaultConfig.env = process.env.NODE_ENV
+  }
   if (!selectedConfigs.global) {
     selectedConfigs.global = require(path.join(configPath, 'global.js'))
   }
@@ -126,6 +131,10 @@ function buildConfig({
   const changes = []
 
   for (const key in parsed) {
+    /* c8 ignore next 3 */
+    if (!hasOwnProp(parsed, key)) {
+      continue
+    }
     const isUndefined = typeof process.env[key] === 'undefined'
     const isOverridable = params.env.overridable.includes(key)
     const isNotOverridableOnWatch = params.env.notOverridableOnWatch.includes(
@@ -151,12 +160,16 @@ function buildConfig({
       process.env[key] = String(parsed[key])
       changed = true
       /* c8 ignore next 3 */
-      if (!isOverridableOnWatch.includes(key)) isOverridableOnWatch.push(key)
+      if (!isOverridableOnWatch.includes(key)) {
+        isOverridableOnWatch.push(key)
+      }
     }
   }
 
-  /* c8 ignore next */
-  if (!changed && currentConfig) return [currentConfig, changes]
+  /* c8 ignore next 3 */
+  if (!changed && currentConfig) {
+    return [currentConfig, changes]
+  }
 
   validateNodeEnv(params.environments)
   assignSelectedConfigs(defaultConfig, selectedConfigs, params.path)
