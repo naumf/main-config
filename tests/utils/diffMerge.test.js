@@ -43,15 +43,18 @@ testSuite(
   () => {
     const newBaseConfig = {
       version: 1,
-      versionDate: new Date(), // changed
+      // changed
+      versionDate: new Date(),
       server: {
         port: 3000
       },
       env: process.env.TEST_ENV,
       db: {
         host: '127.0.0.1',
-        port: 5433, // changed
-        username: 'postgres_change' // changed
+        // changed
+        port: 5433,
+        // changed
+        username: 'postgres_change'
       },
       modules: {
         auth: {
@@ -69,11 +72,13 @@ testSuite(
       modules: {
         auth: {
           token: {
-            expiresInSeconds: 60 * 60 * 12 // changed
+            // changed
+            expiresInSeconds: 60 * 60 * 12
           }
         },
         swagger: {
-          schemes: ['http'] // changed
+          // changed
+          schemes: ['http']
         }
       }
     }
@@ -182,11 +187,13 @@ testSuite('should clone object', () => {
     modules: {
       auth: {
         token: {
-          expiresInSeconds: 60 * 60 * 12 // changed
+          // changed
+          expiresInSeconds: 60 * 60 * 12
         }
       },
       swagger: {
-        schemes: ['http'] // changed
+        // changed
+        schemes: ['http']
       }
     }
   }
@@ -264,5 +271,22 @@ testSuite('should avoid merging invalid props', () => {
   assert.type(target.arr, 'undefined')
   assert.is(result.arr[0].k, 'v')
 })
+
+testSuite(
+  `should not merge target's props if patch prop is an empty object`,
+  () => {
+    const patch = {
+      modules: {
+        auth: {}
+      }
+    }
+
+    const result = diffMerge(oldConfig, patch)
+
+    assert.equal(result.modules.auth, {})
+    assert.type(result.modules.auth.token, 'undefined')
+    assert.type(oldConfig.modules.auth.token, 'object')
+  }
+)
 
 testSuite.run()

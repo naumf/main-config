@@ -112,10 +112,12 @@ function _diffMerge(target, patch, cmp, changeHandler, path) {
 
   const targetNames = []
 
+  let isPatchEmpty = true
   for (const name in patch) {
     if (isPropNotOk(patch, name)) {
       continue
     }
+    isPatchEmpty = false
     targetNames.push(name)
     target[name] = _diffMerge(
       target[name],
@@ -124,6 +126,9 @@ function _diffMerge(target, patch, cmp, changeHandler, path) {
       changeHandler,
       getPropertyPath(path, name)
     )
+  }
+  if (isPatchEmpty && path) {
+    target = {}
   }
 
   for (const name in target) {
