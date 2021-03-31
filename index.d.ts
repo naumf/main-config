@@ -14,6 +14,7 @@ interface Params {
   readonly?: boolean;
   schema?: JSONSchemaType<JSONSchemaType<object>>;
   path?: string,
+  noWarnings?: boolean,
   env?: EnvOptions;
 }
 

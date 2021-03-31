@@ -46,6 +46,9 @@ function setDefaultNotOverridableOnWatch(params) {
   if (!params.env.notOverridableOnWatch.includes('NODE_ENV')) {
     params.env.notOverridableOnWatch.push('NODE_ENV')
   }
+  if (!params.env.notOverridableOnWatch.includes('MAIN_CONFIG_ENV')) {
+    params.env.notOverridableOnWatch.push('MAIN_CONFIG_ENV')
+  }
 }
 
 function getReadonlyConfig(isReadonly, config) {

@@ -52,28 +52,49 @@ function isEnvSettableOnReload(
   )
 }
 
-function validateNodeEnv(environments) {
-  if (!environments.includes(process.env.NODE_ENV)) {
+function validateMainConfigEnv(environments) {
+  if (!environments.includes(process.env.MAIN_CONFIG_ENV)) {
     throw new Error(
-      `Invalid environment variable: NODE_ENV, should be equal to one of the allowed values: {"allowedValues":${JSON.stringify(
+      `Invalid environment variable: MAIN_CONFIG_ENV, should be equal to one of the allowed values: {"allowedValues":${JSON.stringify(
         environments
       )}}`
     )
   }
 }
 
-function assignSelectedConfigs(defaultConfig, selectedConfigs, configPath) {
+function assignSelectedConfigs(defaultConfig, selectedConfigs, params) {
   if (!defaultConfig.env) {
-    defaultConfig.env = process.env.NODE_ENV
+    defaultConfig.env = process.env.MAIN_CONFIG_ENV
   }
   if (!selectedConfigs.global) {
-    selectedConfigs.global = require(path.join(configPath, 'global.js'))
+    selectedConfigs.global = require(path.join(params.path, 'global.js'))
   }
   if (!selectedConfigs.env) {
     selectedConfigs.env = require(path.join(
-      configPath,
+      params.path,
       `${defaultConfig.env}.js`
     ))
+  }
+  if (!process.env.NODE_ENV) {
+    if (['staging', 'production'].includes(defaultConfig.env)) {
+      process.env.NODE_ENV = 'production'
+    } else if (defaultConfig.env === 'test') {
+      process.env.NODE_ENV = 'test'
+    } else {
+      process.env.NODE_ENV = 'development'
+    }
+  }
+
+  if (
+    ['staging', 'production'].includes(defaultConfig.env) &&
+    process.env.NODE_ENV !== 'production' &&
+    !params.noWarnings
+  ) {
+    process.emitWarning('NODE_ENV is not set to production.', {
+      code: 'INCORRECT_NODE_ENV',
+      detail:
+        'Set NODE_ENV="production" to improve performance on production and production-like environments.'
+    })
   }
 }
 
@@ -171,8 +192,8 @@ function buildConfig({
     return [currentConfig, changes]
   }
 
-  validateNodeEnv(params.environments)
-  assignSelectedConfigs(defaultConfig, selectedConfigs, params.path)
+  validateMainConfigEnv(params.environments)
+  assignSelectedConfigs(defaultConfig, selectedConfigs, params)
 
   const config = mergeConfig(
     isReload,

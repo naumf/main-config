@@ -2,7 +2,7 @@
 Load, merge (global with env specific) and validate configuration files.
 
 ## Features
-- one global (shared) config file gets merged with env specific file.
+- one global (shared) config file gets merged with env specific file based on `MAIN_CONFIG_ENV` value.
 - environment variables are loaded from .env file with [dotenv](https://github.com/motdotla/dotenv).
 - watch for .env changes, reload config and emit changes. Uses [dequal](https://github.com/lukeed/dequa) to check for changes.
 - validate environment variables and merged config using [Ajv](https://github.com/ajv-validator/ajv) schema.
@@ -39,6 +39,7 @@ mainConfig(params?: Params): MainConfig
 - `schema?: Object`
   - Validate the object returned with `config()` method. Check [Ajv JSON Schema](https://github.com/ajv-validator/ajv/blob/master/docs/json-schema.md) for more info.
 - `path?: String` (**default**: The path of the folder where this module is required)
+- `noWarnings?: Boolean` (**default**: false)
 - `env?: EnvOptions`
 
 #### EnvOptions
@@ -53,10 +54,10 @@ mainConfig(params?: Params): MainConfig
   ```js
   {
     type: 'object',
-    required: ['NODE_ENV'],
+    required: ['MAIN_CONFIG_ENV'],
     additionalProperties: true,
     properties: {
-      NODE_ENV: {
+      MAIN_CONFIG_ENV: {
         enum: [...params.environments]
       }
     }
@@ -64,7 +65,7 @@ mainConfig(params?: Params): MainConfig
   ```
 - `overridable?: Array<string>`
   - Use this if you want to override any environment variable that is already set on your system. i.e. If process.env.NODE_ENV is set to `development` and you want to override it with something set in `.env` file, set property to `['NODE_ENV']` and process.env.NODE_ENV will be overridden.
-- `notOverridableOnWatch?: Array<string>` (**default**: `['NODE_ENV']`)
+- `notOverridableOnWatch?: Array<string>` (**default**: `['NODE_ENV', 'MAIN_CONFIG_ENV']`)
   - Use this if you don't want some environment variable to be overriden on watch (during runtime). Merges with default.
 
 ### MainConfig

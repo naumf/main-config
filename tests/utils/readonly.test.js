@@ -260,6 +260,9 @@ testSuite('should use cached proxies', () => {
   assert.is(rConfig.modules.auth.token.secret, config.modules.auth.token.secret)
   assert.is(cacheSpy.get.callCount, 1)
   assert.is(cacheSpy.set.callCount, 2)
+
+  cacheSpy.get.restore()
+  cacheSpy.set.restore()
 })
 
 testSuite.run()

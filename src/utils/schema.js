@@ -38,6 +38,7 @@ const paramsSchema = {
       default: {}
     },
     path: { type: 'string', default: '' },
+    noWarnings: { type: 'boolean', default: false },
     env: {
       type: 'object',
       properties: {
@@ -56,7 +57,7 @@ const paramsSchema = {
         notOverridableOnWatch: {
           type: 'array',
           items: { type: 'string' },
-          default: ['NODE_ENV']
+          default: ['NODE_ENV', 'MAIN_CONFIG_ENV']
         }
       },
       default: {}
@@ -109,10 +110,10 @@ function validateParamsSchema(params = {}) {
   }
   params.env.schema = diffMerge(params.env.schema, {
     type: 'object',
-    required: ['NODE_ENV'],
+    required: ['MAIN_CONFIG_ENV'],
     additionalProperties: true,
     properties: {
-      NODE_ENV: {
+      MAIN_CONFIG_ENV: {
         enum: [...params.environments]
       }
     }

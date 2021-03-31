@@ -7,6 +7,7 @@ const assert = require('uvu/assert')
 const mainConfig = require('../index')
 const { hasOwnProp } = require('../src/utils')
 const getTimeoutDelay = require('../tests_utils/getTimeoutDelay')
+const sinon = require('sinon')
 
 const configPath = path.join(__dirname, '../tests_data')
 const envPath = path.join(configPath, '.env')
@@ -55,7 +56,7 @@ function testWatchConfig({
 const testSuite = suite('mainConfig')
 
 testSuite.after.each(() => {
-  process.env.NODE_ENV = 'test'
+  process.env.MAIN_CONFIG_ENV = 'test'
   if (hasOwnProp(process.env, 'MC_VERSION')) {
     delete process.env.MC_VERSION
   }
@@ -127,18 +128,25 @@ testSuite(
   }
 )
 
-testSuite('should add NODE_ENV to notOverridableOnWatch', () => {
-  const params = {
-    path: configPath,
-    env: {
-      path: envPath,
-      notOverridableOnWatch: []
+testSuite(
+  'should add NODE_ENV and MAIN_CONFIG_ENV to notOverridableOnWatch',
+  () => {
+    const params = {
+      path: configPath,
+      env: {
+        path: envPath,
+        notOverridableOnWatch: []
+      }
     }
+    assert.is(params.env.notOverridableOnWatch.length, 0)
+    mainConfig(params)
+    assert.is(params.env.notOverridableOnWatch.includes('NODE_ENV'), true)
+    assert.is(
+      params.env.notOverridableOnWatch.includes('MAIN_CONFIG_ENV'),
+      true
+    )
   }
-  assert.is(params.env.notOverridableOnWatch.length, 0)
-  mainConfig(params)
-  assert.is(params.env.notOverridableOnWatch.includes('NODE_ENV'), true)
-})
+)
 
 testSuite('should be readonly', () => {
   const params = {
@@ -407,7 +415,7 @@ testSuite('should emit errors when watching for changes', async () => {
   const invalidEnv = 'dev'
   const validEnv = 'test'
   const envBuffer = fs.readFileSync(watchEnvPath, { encoding: 'utf8' })
-  changeWatchEnvValue(envBuffer, 'NODE_ENV', validEnv)
+  changeWatchEnvValue(envBuffer, 'MAIN_CONFIG_ENV', validEnv)
   const { config, unwatchFile, watchError } = mainConfig({
     path: configPath,
     env: {
@@ -426,14 +434,14 @@ testSuite('should emit errors when watching for changes', async () => {
       assert.instance(err, Error)
       unwatchError()
       unwatchFile()
-      changeWatchEnvValue(envBuffer, 'NODE_ENV', validEnv)
+      changeWatchEnvValue(envBuffer, 'MAIN_CONFIG_ENV', validEnv)
       resolve()
     })
-    changeWatchEnvValue(envBuffer, 'NODE_ENV', invalidEnv)
+    changeWatchEnvValue(envBuffer, 'MAIN_CONFIG_ENV', invalidEnv)
     timeout = setTimeout(() => {
       unwatchError()
       unwatchFile()
-      changeWatchEnvValue(envBuffer, 'NODE_ENV', validEnv)
+      changeWatchEnvValue(envBuffer, 'MAIN_CONFIG_ENV', validEnv)
       reject(
         new Error(
           `Callback was not invoked within the specified timeout: ${timeoutDelay}ms`
@@ -463,8 +471,8 @@ testSuite(
   }
 )
 testSuite('should throw if env is not listed in environments', () => {
-  const oldEnv = process.env.NODE_ENV
-  process.env.NODE_ENV = 'invalid_env'
+  const oldEnv = process.env.MAIN_CONFIG_ENV
+  process.env.MAIN_CONFIG_ENV = 'invalid_env'
 
   assert.throws(
     () =>
@@ -476,10 +484,107 @@ testSuite('should throw if env is not listed in environments', () => {
       }),
     (err) =>
       err.message ===
-      'Invalid environment variable: NODE_ENV, should be equal to one of the allowed values: {"allowedValues":["local","development","staging","production","test"]}'
+      'Invalid environment variable: MAIN_CONFIG_ENV, should be equal to one of the allowed values: {"allowedValues":["local","development","staging","production","test"]}'
   )
 
-  process.env.NODE_ENV = oldEnv
+  process.env.MAIN_CONFIG_ENV = oldEnv
 })
+
+testSuite('should set NODE_ENV to corresponding default value', () => {
+  const oldEnv = process.env.MAIN_CONFIG_ENV
+  const oldNodeEnv = process.env.NODE_ENV
+
+  process.env.MAIN_CONFIG_ENV = 'development'
+  if (hasOwnProp(process.env, 'NODE_ENV')) {
+    delete process.env.NODE_ENV
+  }
+  mainConfig({
+    path: configPath,
+    env: { path: envPath }
+  })
+  assert.is(process.env.NODE_ENV, 'development')
+
+  process.env.MAIN_CONFIG_ENV = 'test'
+  if (hasOwnProp(process.env, 'NODE_ENV')) {
+    delete process.env.NODE_ENV
+  }
+  mainConfig({
+    path: configPath,
+    env: { path: envPath }
+  })
+  assert.is(process.env.NODE_ENV, 'test')
+
+  process.env.MAIN_CONFIG_ENV = 'staging'
+  if (hasOwnProp(process.env, 'NODE_ENV')) {
+    delete process.env.NODE_ENV
+  }
+  mainConfig({
+    path: configPath,
+    env: { path: envPath }
+  })
+  assert.is(process.env.NODE_ENV, 'production')
+
+  process.env.MAIN_CONFIG_ENV = 'production'
+  if (hasOwnProp(process.env, 'NODE_ENV')) {
+    delete process.env.NODE_ENV
+  }
+  mainConfig({
+    path: configPath,
+    env: { path: envPath }
+  })
+  assert.is(process.env.NODE_ENV, 'production')
+
+  process.env.MAIN_CONFIG_ENV = 'local'
+  if (hasOwnProp(process.env, 'NODE_ENV')) {
+    delete process.env.NODE_ENV
+  }
+  mainConfig({
+    path: configPath,
+    env: { path: envPath }
+  })
+  assert.is(process.env.NODE_ENV, 'development')
+
+  process.env.MAIN_CONFIG_ENV = oldEnv
+  process.env.NODE_ENV = oldNodeEnv
+})
+
+testSuite(
+  'should warn if NODE_ENV is not set to production on production and staging',
+  () => {
+    const oldEnv = process.env.MAIN_CONFIG_ENV
+    const oldNodeEnv = process.env.NODE_ENV
+
+    process.env.MAIN_CONFIG_ENV = 'staging'
+    process.env.NODE_ENV = 'development'
+
+    const processEmitWarningSpy = sinon.spy(process, 'emitWarning')
+
+    mainConfig({
+      path: configPath,
+      env: { path: envPath }
+    })
+    assert.is(process.env.NODE_ENV, 'development')
+    assert.is(processEmitWarningSpy.callCount, 1)
+    assert.is(
+      processEmitWarningSpy.calledWith('NODE_ENV is not set to production.'),
+      true
+    )
+
+    processEmitWarningSpy.resetHistory()
+
+    mainConfig({
+      path: configPath,
+      noWarnings: true,
+      env: { path: envPath }
+    })
+    assert.is(process.env.NODE_ENV, 'development')
+    assert.is(processEmitWarningSpy.callCount, 0)
+
+    processEmitWarningSpy.restore()
+
+    process.env.MAIN_CONFIG_ENV = oldEnv
+    process.env.NODE_ENV = oldNodeEnv
+  }
+)
 
 testSuite.run()
