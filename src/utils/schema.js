@@ -67,17 +67,20 @@ const paramsSchema = {
 }
 
 function stringifyParams(params) {
-  return params ? ': ' + JSON.stringify(params) : ''
+  /* c8 ignore next */
+  return params ? '\n  - params: ' + JSON.stringify(params) : ''
 }
 
 function createAjvErrors(messagePrefix = '', errors = []) {
   return new Error(
-    messagePrefix +
+    `${messagePrefix}\n` +
       errors
         .map((e) =>
-          e.dataPath
-            ? `path: ${e.dataPath}, ${e.message}${stringifyParams(e.params)}`
-            : e.message
+          e.instancePath
+            ? `- path: ${e.instancePath} ${e.message}.${stringifyParams(
+                e.params
+              )}`
+            : `- ${e.message}`
         )
         .join('\n')
   )
@@ -85,12 +88,14 @@ function createAjvErrors(messagePrefix = '', errors = []) {
 
 function createEnvSchemaErrors(errors = []) {
   return new Error(
-    'Invalid environment variable(s): ' +
+    'Invalid environment variable(s):\n' +
       errors
         .map((e) =>
-          e.dataPath
-            ? `${e.dataPath.slice(1)}, ${e.message}${stringifyParams(e.params)}`
-            : e.message
+          e.instancePath
+            ? `- ${e.instancePath.slice(1)} ${e.message}.${stringifyParams(
+                e.params
+              )}`
+            : `- ${e.message}`
         )
         .join('\n')
   )
@@ -101,12 +106,12 @@ function validateParamsSchema(params = {}) {
   const validateParams = ajvInstance.compile(paramsSchema)
   const valid = validateParams(params)
   if (!valid) {
-    throw createAjvErrors('Invalid params. ', validateParams.errors)
+    throw createAjvErrors('Invalid params:', validateParams.errors)
   }
 
   const envSchemaValid = ajvInstance.validateSchema(params.env.schema)
   if (!envSchemaValid) {
-    throw createAjvErrors('Invalid params.env.schema. ', ajvInstance.errors)
+    throw createAjvErrors('Invalid params.env.schema:', ajvInstance.errors)
   }
   params.env.schema = diffMerge(params.env.schema, {
     type: 'object',
@@ -122,7 +127,7 @@ function validateParamsSchema(params = {}) {
 
   const configSchemaValid = ajvInstance.validateSchema(params.schema)
   if (!configSchemaValid) {
-    throw createAjvErrors('Invalid params.schema. ', ajvInstance.errors)
+    throw createAjvErrors('Invalid params.schema:', ajvInstance.errors)
   }
   params.schema = diffMerge(params.schema, {
     type: 'object',

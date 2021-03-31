@@ -244,8 +244,9 @@ testSuite('should validate env against provided schema', () => {
         }
       }),
     (err) =>
-      err.message ===
-      'Invalid environment variable(s): MC_TOKEN_SECRET, should be number: {"type":"number"}'
+      err.message.startsWith(
+        `Invalid environment variable(s):\n- MC_TOKEN_SECRET must be number`
+      )
   )
 
   assert.not.throws(() =>
@@ -278,8 +279,7 @@ testSuite('should validate config against provided schema', () => {
         }
       }),
     (err) =>
-      err.message ===
-      'Invalid config. path: /version, should be string: {"type":"string"}'
+      err.message.startsWith('Invalid config:\n- path: /version must be string')
   )
 
   assert.not.throws(() =>
@@ -308,8 +308,7 @@ testSuite('should throw invalid params', () => {
         }
       }),
     (err) =>
-      err.message ===
-      'Invalid params. path: /schema, should be object: {"type":"object"}'
+      err.message.startsWith('Invalid params:\n- path: /schema must be object')
   )
 })
 
@@ -329,7 +328,7 @@ testSuite('should throw invalid env schema', () => {
           }
         }
       }),
-    (err) => err.message.startsWith('Invalid params.env.schema.')
+    (err) => err.message.startsWith('Invalid params.env.schema:\n')
   )
 })
 
@@ -349,7 +348,7 @@ testSuite('should throw invalid config schema', () => {
           path: envPath
         }
       }),
-    (err) => err.message.startsWith('Invalid params.schema.')
+    (err) => err.message.startsWith('Invalid params.schema:\n')
   )
 })
 

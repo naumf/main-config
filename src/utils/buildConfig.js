@@ -132,7 +132,7 @@ function mergeConfig(
 function validateConfig(validateConfigSchema, config) {
   const validConfigSchema = validateConfigSchema(config)
   if (!validConfigSchema) {
-    throw createAjvErrors('Invalid config. ', validateConfigSchema.errors)
+    throw createAjvErrors('Invalid config:', validateConfigSchema.errors)
   }
 }
 
