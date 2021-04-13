@@ -8,7 +8,8 @@ const ajv = new Ajv({
   removeAdditional: true,
   useDefaults: true,
   coerceTypes: false,
-  allErrors: true
+  allErrors: true,
+  allowUnionTypes: true
 })
 
 const defaultEnvironments = [
