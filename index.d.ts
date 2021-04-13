@@ -11,7 +11,7 @@ interface EnvOptions {
 interface Params {
   ajv?: Ajv,
   environments?: Array<string>;
-  readonly?: boolean;
+  readonly?: 'proxy' | 'freeze' | false | true;
   schema?: JSONSchemaType<JSONSchemaType<object>>;
   path?: string,
   noWarnings?: boolean,

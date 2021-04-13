@@ -8,6 +8,7 @@ const isInvalidProp = require('./isInvalidProp')
 const isNullish = require('./isNullish')
 const isObject = require('./isObject')
 const readonly = require('./readonly')
+const deepFreeze = require('./deepFreeze')
 const schema = require('./schema')
 
 module.exports = {
@@ -19,5 +20,6 @@ module.exports = {
   isNullish,
   isObject,
   readonly,
+  deepFreeze,
   schema
 }

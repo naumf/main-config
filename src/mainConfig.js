@@ -5,6 +5,7 @@ const { EventEmitter } = require('events')
 const {
   buildConfig,
   readonly,
+  deepFreeze,
   schema: { validateParamsSchema },
   file: { watchFile, checkFileAccess }
 } = require('./utils')
@@ -52,7 +53,12 @@ function setDefaultNotOverridableOnWatch(params) {
 }
 
 function getReadonlyConfig(isReadonly, config) {
-  return isReadonly ? readonly(config) : null
+  if (isReadonly === 'freeze' || isReadonly === true) {
+    return deepFreeze(config)
+  } else if (isReadonly === 'proxy') {
+    return readonly(config)
+  }
+  return null
 }
 
 function emitChanges(emitter, changes) {

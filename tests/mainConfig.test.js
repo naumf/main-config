@@ -148,9 +148,10 @@ testSuite(
   }
 )
 
-testSuite('should be readonly', () => {
+testSuite('should be readonly (proxy)', () => {
   const params = {
     path: configPath,
+    readonly: 'proxy',
     env: {
       path: envPath
     }
@@ -163,6 +164,27 @@ testSuite('should be readonly', () => {
     },
     (err) =>
       err.message === 'Assignment to read-only properties is not allowed.'
+  )
+  assert.is(config().version, 1)
+})
+
+testSuite('should be readonly (freeze)', () => {
+  const params = {
+    path: configPath,
+    readonly: 'freeze',
+    env: {
+      path: envPath
+    }
+  }
+  const { config } = mainConfig(params)
+  assert.is(config().version, 1)
+  assert.throws(
+    () => {
+      config().version = 2
+    },
+    (err) =>
+      err.message ===
+      "Cannot assign to read only property 'version' of object '#<Object>'"
   )
   assert.is(config().version, 1)
 })

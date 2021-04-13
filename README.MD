@@ -34,8 +34,11 @@ mainConfig(params?: Params): MainConfig
   - Use this to pass your own Ajv version 7 instance (i.e. if you need to have different Ajv initialization options, or you need to use ajv-keywords, ajv-formats etc.)
 - `environments?: Array<string>` (**default**: `['local', 'development', 'staging', 'production', 'test']`)
   - List your different environments here
-- `readonly?: Boolean` (**default**: true)
+- `readonly?: 'freeze' | 'proxy' | false | true` (**default**: 'freeze')
   - Set this to `false` if you want the returned object using `config()` method to be mutable. Check [Caveats](#user-content-caveats) section for more info.
+  - If set to `'freeze'` the returned object is deep readonly via Object.freeze.
+  - If set to `'proxy'` the returned object is deep readonly via Proxy traps.
+  - If set to `true` the returned object is deep readonly via the default readonly option: `'freeze'`.
 - `schema?: Object`
   - Validate the object returned with `config()` method. Check [Ajv JSON Schema](https://github.com/ajv-validator/ajv/blob/master/docs/json-schema.md) for more info.
 - `path?: String` (**default**: The path of the folder where this module is required)

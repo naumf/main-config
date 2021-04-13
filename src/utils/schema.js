@@ -31,7 +31,11 @@ const paramsSchema = {
       minItems: 1,
       default: defaultEnvironments
     },
-    readonly: { type: 'boolean', default: true },
+    readonly: {
+      type: ['string', 'boolean'],
+      enum: ['freeze', 'proxy', false, true],
+      default: 'freeze'
+    },
     schema: {
       type: 'object',
       additionalProperties: true,
