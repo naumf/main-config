@@ -120,7 +120,7 @@ function validateParamsSchema(params = {}) {
   }
   params.env.schema = diffMerge(params.env.schema, {
     type: 'object',
-    required: ['MAIN_CONFIG_ENV'],
+    required: [...(params.env.schema.required || []), 'MAIN_CONFIG_ENV'],
     additionalProperties: true,
     properties: {
       MAIN_CONFIG_ENV: {
