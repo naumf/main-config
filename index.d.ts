@@ -18,10 +18,6 @@ interface Params {
   env?: EnvOptions;
 }
 
-interface Config {
-  (): object
-}
-
 interface Changes {
   path: string;
   newValue: any;
@@ -40,11 +36,6 @@ interface UnwatchConfig {
   (): void
 }
 
-interface WatchConfig {
-  (propertyPath: string, listener: WatchConfigSinglePropertyListener): UnwatchConfig
-  (propertyPath: '*', listener: WatchConfigAllPropertiesListener): UnwatchConfig
-}
-
 interface WatchErrorListener {
   (err: Error): void
 }
@@ -53,19 +44,12 @@ interface UnwatchError {
   (): void
 }
 
-interface WatchError {
-  (listener: WatchErrorListener): UnwatchError
-}
-
-interface UnwatchFile {
-  (): void
-}
-
 interface MainConfig {
-  config: Config,
-  watchConfig?: WatchConfig,
-  watchError?: WatchError,
-  unwatchFile: UnwatchFile
+  config(): object,
+  watchConfig?(propertyPath: string, listener: WatchConfigSinglePropertyListener): UnwatchConfig
+  watchConfig?(propertyPath: '*', listener: WatchConfigAllPropertiesListener): UnwatchConfig
+  watchError?(listener: WatchErrorListener): UnwatchError,
+  unwatchFile(): void
 }
 
 declare function MainConfig(params?: Params): MainConfig;

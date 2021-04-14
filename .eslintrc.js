@@ -24,6 +24,12 @@ module.exports = {
       }
     ],
     indent: 'off',
+    'prettier/prettier': [
+      'error',
+      {
+        endOfLine: 'auto'
+      }
+    ],
     curly: [2, 'all'],
     'guard-for-in': ['error'],
     'no-shadow': [2, { builtinGlobals: false, hoist: 'functions', allow: [] }],
