@@ -8,6 +8,9 @@ const isNullish = require('./isNullish')
 const isObject = require('./isObject')
 
 function cloneObject(obj) {
+  if (obj instanceof RegExp) {
+    return obj
+  }
   if (obj instanceof Date) {
     return new Date(obj)
   }
@@ -22,7 +25,9 @@ function cloneObject(obj) {
     } else if (Array.isArray(value)) {
       cloned[name] = cloneArray(value)
     } else if (isObject(value)) {
-      if (value instanceof Date) {
+      if (value instanceof RegExp) {
+        cloned[name] = value
+      } else if (value instanceof Date) {
         cloned[name] = new Date(value)
       } else {
         cloned[name] = Object.assign({}, cloneObject(value))
@@ -93,6 +98,9 @@ function isPropNotOk(obj, prop) {
 }
 
 function _diffMerge(target, patch, cmp, changeHandler, path) {
+  if (patch instanceof RegExp) {
+    return patch
+  }
   if (patch instanceof Date) {
     patch = new Date(patch)
     checkForChanges(patch, cmp, changeHandler, path)

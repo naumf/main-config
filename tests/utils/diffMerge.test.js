@@ -10,6 +10,7 @@ process.env.TEST_ENV = 'test'
 const oldConfig = {
   version: 1,
   versionDate: new Date(),
+  pattern: /^[0-9]$/,
   server: {
     port: 3000
   },
@@ -180,8 +181,16 @@ testSuite(
 testSuite('should clone object', () => {
   const newEnvConfig = {
     testArrObj: [
-      { k: 'v', d: new Date(), a: [1, 2], o: { k1: 'v1' }, n: null },
+      {
+        k: 'v',
+        d: new Date(),
+        p: /^[0-9]$/,
+        a: [1, 2],
+        o: { k1: 'v1' },
+        n: null
+      },
       new Date(),
+      /^[0-9]$/,
       [1]
     ],
     modules: {
