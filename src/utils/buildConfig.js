@@ -11,11 +11,12 @@ const hasOwnProp = require('./hasOwnProp')
 function parseAndValidateEnv(envPath, validateEnvSchema) {
   const envBuffer = fs.readFileSync(envPath, { encoding: 'utf8' })
   const parsed = dotenv.parse(envBuffer)
-  const validEnvSchema = validateEnvSchema(parsed)
+  const merged = { ...process.env, ...parsed }
+  const validEnvSchema = validateEnvSchema(merged)
   if (!validEnvSchema) {
     throw createEnvSchemaErrors(validateEnvSchema.errors)
   }
-  return parsed
+  return merged
 }
 
 function isConfigReloaded(currentEnv, watch) {
